@@ -1,2 +1,2 @@
 pandas
-dvc[gcs]
+dvc[gs]
