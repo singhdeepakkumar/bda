@@ -34,9 +34,9 @@ jobs:
 
       - name: Configure DVC Remote for GCS
         run: |
-          dvc remote add -d gcsremote gcs://bda_data-pipeline_data/processed_data
-          dvc remote modify gcsremote credentialpath /tmp/gcp-key.json
-          dvc remote modify gcsremote projectname ${{ secrets.GCP_PROJECT_ID }}
+          dvc remote add -d ${{ secrets.GCS_DVC_REMOTE_NAME }} gcs://bda_data-pipeline_data/processed_data
+          dvc remote modify ${{ secrets.GCS_DVC_REMOTE_NAME }} credentialpath /tmp/gcp-key.json
+          dvc remote modify ${{ secrets.GCS_DVC_REMOTE_NAME }} projectname ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Download raw data from GCS (no DVC)
         run: |
