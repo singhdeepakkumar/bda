@@ -1,6 +1,9 @@
+import os
 import pandas as pd
 
 def load_data(input_path):
+    input_path = os.getenv("RAW_DATA_PATH", "data/raw/churn.csv")
+    print(f"Loading data from: {input_path}")
     return pd.read_csv(input_path)
 
 def preprocess(df):

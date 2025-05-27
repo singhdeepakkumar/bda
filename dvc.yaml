@@ -3,6 +3,6 @@ stages:
     cmd: python pipeline/preprocessing.py
     deps:
       - pipeline/preprocessing.py
-      - data/raw/customer_churn.csv
+      - data/raw/telecom_customer_churn.csv
     outs:
-      - data/processed/processed_churn.csv
+      - data/processed/telecom_customer_churn.csv

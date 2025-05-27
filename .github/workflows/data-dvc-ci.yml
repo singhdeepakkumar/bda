@@ -34,14 +34,14 @@ jobs:
 
       - name: Configure DVC Remote for GCS
         run: |
-          dvc remote add -d ${{ secrets.GCS_DVC_REMOTE_NAME }} gcs://bda_data-pipeline_data/processed_data
+          dvc remote add -d ${{ secrets.GCS_DVC_REMOTE_NAME }} gcs://${{ secrets.GCS_BUCKET }}/processed_data
           dvc remote modify ${{ secrets.GCS_DVC_REMOTE_NAME }} credentialpath /tmp/gcp-key.json
           dvc remote modify ${{ secrets.GCS_DVC_REMOTE_NAME }} projectname ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Download raw data from GCS (no DVC)
         run: |
           mkdir -p data/raw
-          gsutil cp gs://${{ secrets.GCS_BUCKET }}/raw_data/customer_churn.csv data/raw/
+          gsutil cp gs://${{ secrets.GCS_BUCKET }}/raw_data/telecom_customer_churn.csv data/raw/
 
       - name: Run preprocessing
         run: python pipeline/preprocessing.py
@@ -49,13 +49,13 @@ jobs:
       - name: DVC Track Processed Data
         run: |
           dvc remote modify ${{ secrets.GCS_DVC_REMOTE_NAME }} credentialpath /tmp/gcp-key.json
-          dvc remote modify ${{ secrets.GCS_DVC_REMOTE_NAME }} projectname ${{ secrets.GCP_PROJECT_ID }}
+          dvc remote modify  projectname ${{ secrets.GCP_PROJECT_ID }}
 
-          dvc add data/processed/processed_churn.csv
-          git config --global user.email "ci@github.com"
+          dvc add data/processed/telecom_customer_churn.csv
+          git config --global user.email "singh.d.kumar@gmail.com"
           git config --global user.name "GitHub CI"
-          git add data/processed/processed_churn.csv.dvc dvc.lock
-          git commit -m "Add processed churn data"
+          git add data/processed/telecom_customer_churn.csv.dvc dvc.lock
+          git commit -m "Add processed data"
           git push
 
       - name: Push processed data to GCS via DVC
