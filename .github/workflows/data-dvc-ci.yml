@@ -9,6 +9,7 @@ on:
 
 env:
   RAW_DATA_PATH: data/raw/telecom_customer_churn.csv
+  OUTPUT_PATH: "data/processed/telecom_customer_churn.csv"
 
 jobs:
   preprocess:
@@ -43,9 +44,6 @@ jobs:
         run: |
           mkdir -p data/raw
           gsutil cp gs://${{ secrets.GCS_BUCKET }}/raw_data/telecom_customer_churn.csv data/raw/
-
-      - name: Run preprocessing
-        run: python pipeline/preprocessing.py
 
       - name: DVC Track Processed Data
         run: |
