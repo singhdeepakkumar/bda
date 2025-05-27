@@ -1,0 +1,65 @@
+name: Preprocess and DVC Version Processed Data
+
+on:
+  push:
+    branches: [dev, release/**]
+  workflow_dispatch:
+env:
+  RAW_DATA_PATH: data/raw/telecom_customer_churn.csv
+
+jobs:
+  preprocess:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Set up GCP credentials
+        run: |
+          echo "${{ secrets.GCP_SERVICE_ACCOUNT_JSON }}" > /tmp/gcp-key.json
+          gcloud auth activate-service-account --key-file=/tmp/gcp-key.json
+          gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Configure DVC Remote for GCS
+        run: |
+          dvc remote add -d gcsremote gcs://bda_data-pipeline_data/processed_data
+          dvc remote modify gcsremote credentialpath /tmp/gcp-key.json
+          dvc remote modify gcsremote projectname ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Download raw data from GCS (no DVC)
+        run: |
+          mkdir -p data/raw
+          gsutil cp gs://${{ secrets.GCS_BUCKET }}/raw_data/customer_churn.csv data/raw/
+
+      - name: Run preprocessing
+        run: python pipeline/preprocessing.py
+
+      - name: DVC Track Processed Data
+        run: |
+          dvc remote modify ${{ secrets.GCS_DVC_REMOTE_NAME }} credentialpath /tmp/gcp-key.json
+          dvc remote modify ${{ secrets.GCS_DVC_REMOTE_NAME }} projectname ${{ secrets.GCP_PROJECT_ID }}
+
+          dvc add data/processed/processed_churn.csv
+          git config --global user.email "ci@github.com"
+          git config --global user.name "GitHub CI"
+          git add data/processed/processed_churn.csv.dvc dvc.lock
+          git commit -m "Add processed churn data"
+          git push
+
+      - name: Push processed data to GCS via DVC
+        run: dvc push
+
+      - name: Create and push version tag
+        run: |
+          VERSION="data-v$(date +'%Y.%m.%d.%H%M')"
+          git tag $VERSION
+          git push origin $VERSION
