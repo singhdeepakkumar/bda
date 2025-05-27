@@ -50,7 +50,7 @@ jobs:
       - name: DVC Track Processed Data
         run: |
           dvc remote modify ${{ secrets.GCS_DVC_REMOTE_NAME }} credentialpath /tmp/gcp-key.json
-          dvc remote modify  projectname ${{ secrets.GCP_PROJECT_ID }}
+          dvc remote modify projectname ${{ secrets.GCP_PROJECT_ID }}
 
           dvc add data/processed/telecom_customer_churn.csv
           git config --global user.email "singh.d.kumar@gmail.com"
