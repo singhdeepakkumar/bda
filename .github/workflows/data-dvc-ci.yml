@@ -34,7 +34,8 @@ jobs:
 
       - name: Configure DVC Remote for GCS
         run: |
-          dvc remote add -d ${{ secrets.GCS_DVC_REMOTE_NAME }} gcs://${{ secrets.GCS_BUCKET }}/processed_data
+          echo "${{ secrets.GCS_DVC_REMOTE_NAME }}"
+          dvc remote add -d ${{ secrets.GCS_DVC_REMOTE_NAME }} gs://${{ secrets.GCS_BUCKET }}/processed_data
           dvc remote modify ${{ secrets.GCS_DVC_REMOTE_NAME }} credentialpath /tmp/gcp-key.json
           dvc remote modify ${{ secrets.GCS_DVC_REMOTE_NAME }} projectname ${{ secrets.GCP_PROJECT_ID }}
 
