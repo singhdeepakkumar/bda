@@ -13,6 +13,7 @@ env:
 
 jobs:
   preprocess:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -59,5 +60,10 @@ jobs:
           VERSION="data-v$(date +'%Y.%m.%d.%H%M')"
           git config --global user.email "singh.d.kumar@gmail.com"
           git config --global user.name "GitHub Actions"
-          git tag -a $VERSION -m "Preprocessed data version created by CI on $(date)"
-          git push origin $VERSION || echo "Tag $VERSION already exists"
+          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "Tag $VERSION already exists. Skipping tagging."
+          else
+            git tag -a $VERSION -m "Preprocessed data version created by CI on $(date)"
+            git push origin $VERSION
+          fi
