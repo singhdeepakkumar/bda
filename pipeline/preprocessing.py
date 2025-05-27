@@ -10,8 +10,8 @@ def load_data(input_path):
 def preprocess(df):
     print(f"Preprocessing")
     df.dropna(inplace=True)
-    df = df.drop(columns=['customerID'], errors='ignore')
-    df['TotalCharges'] = pd.to_numeric(df['TotalCharges'], errors='coerce').fillna(0)
+    df = df.drop(columns=['Customer ID'], errors='ignore')
+    df['Total Charges'] = pd.to_numeric(df['Total Charges'], errors='coerce').fillna(0)
     return df
 
 def save_data(df, output_path):
