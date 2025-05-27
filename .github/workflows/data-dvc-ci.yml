@@ -28,9 +28,9 @@ jobs:
 
       - name: Set up GCP credentials
         run: |
-          echo "${{ secrets.GCP_SERVICE_ACCOUNT_JSON }}" > /tmp/gcp-key.json
+          echo "${{ secrets.GCP_SERVICE_ACCOUNT_JSON }}" | base64 -d > /tmp/gcp-key.json
+          cat /tmp/gcp-key.json | jq .  # validate
           gcloud auth activate-service-account --key-file=/tmp/gcp-key.json
-          gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Configure DVC Remote for GCS
         run: |
