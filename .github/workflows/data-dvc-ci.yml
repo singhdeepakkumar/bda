@@ -51,19 +51,15 @@ jobs:
         run: |
           dvc remote modify ${{ secrets.GCS_DVC_REMOTE_NAME }} credentialpath /tmp/gcp-key.json
 
-
-          dvc add data/processed/telecom_customer_churn.csv
-          git config --global user.email "singh.d.kumar@gmail.com"
-          git config --global user.name "GitHub CI"
-          git add data/processed/telecom_customer_churn.csv.dvc dvc.lock
-          git commit -m "Add processed data"
-          git push
-
-      - name: Push processed data to GCS via DVC
-        run: dvc push
+      - name: Run DVC Pipeline and Push Processed Data
+        run: |
+          dvc repro
+          dvc push
 
       - name: Create and push version tag
         run: |
           VERSION="data-v$(date +'%Y.%m.%d.%H%M')"
-          git tag $VERSION
-          git push origin $VERSION
+          git config --global user.email "singh.d.kumar@gmail.com"
+          git config --global user.name "GitHub Actions"
+          git tag -a $VERSION -m "Preprocessed data version created by CI on $(date)"
+          git push origin $VERSION || echo "Tag $VERSION already exists"
