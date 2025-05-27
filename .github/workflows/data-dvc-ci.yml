@@ -2,8 +2,11 @@ name: Preprocess and DVC Version Processed Data
 
 on:
   push:
-    branches: [dev, release/**]
+    branches: [master, developement, feature/**]
+  pull_request:
+    branches: [master, developement, feature/**]
   workflow_dispatch:
+
 env:
   RAW_DATA_PATH: data/raw/telecom_customer_churn.csv
 
