@@ -1,10 +1,9 @@
 import os
 import pandas as pd
-import pytest
 from unittest.mock import patch, MagicMock, mock_open
 from io import StringIO
 
-from src.data_pipeline import data_loading
+from src.pipeline.data import data_loading
 
 @pytest.fixture
 def sample_csv_data():
@@ -33,12 +32,12 @@ def test_save_data(tmp_path, sample_dataframe):
     result = pd.read_csv(output_path)
     pd.testing.assert_frame_equal(result, sample_dataframe)
 
-@patch("src.data_pipeline.data_loading.log_metric")
-@patch("src.data_pipeline.data_loading.log_artifact")
-@patch("src.data_pipeline.data_loading.start_run")
-@patch("src.data_pipeline.data_loading.set_experiment")
-@patch("src.data_pipeline.data_loading.load_data")
-@patch("src.data_pipeline.data_loading.save_data")
+@patch("src.pipeline.data.data_loading.log_metric")
+@patch("src.pipeline.data.data_loading.log_artifact")
+@patch("src.pipeline.data.data_loading.start_run")
+@patch("src.pipeline.data.data_loading.set_experiment")
+@patch("src.pipeline.data.data_loading.load_data")
+@patch("src.pipeline.data.data_loading.save_data")
 def test_main(mock_save, mock_load, mock_set_exp, mock_start_run, mock_log_artifact, mock_log_metric):
     mock_df = pd.DataFrame({"a": [1, 2], "b": [3, 4]})
     mock_load.return_value = mock_df

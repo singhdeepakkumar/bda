@@ -2,8 +2,6 @@ import yaml
 import logging
 import os
 
-# logging configuration
-# Ensure the "logs" directory exists
 def logging_setup(log_file_name):
     log_dir = 'logs'
     os.makedirs(log_dir, exist_ok=True)

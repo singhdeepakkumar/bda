@@ -1,9 +1,8 @@
 import os
 import pandas as pd
-import pytest
 from unittest.mock import patch, MagicMock, mock_open
 
-from src.data_pipeline import data_preprocessing
+from src.pipeline.data import data_preprocessing
 
 @pytest.fixture
 def raw_df():
@@ -62,12 +61,12 @@ def test_save_data(tmp_path):
     loaded = pd.read_csv(file_path)
     pd.testing.assert_frame_equal(df, loaded)
 
-@patch("src.data_pipeline.data_preprocessing.save_data")
-@patch("src.data_pipeline.data_preprocessing.preprocess")
-@patch("src.data_pipeline.data_preprocessing.load_data")
-@patch("src.data_pipeline.data_preprocessing.load_params")
-@patch("src.data_pipeline.data_preprocessing.start_run")
-@patch("src.data_pipeline.data_preprocessing.set_experiment")
+@patch("src.pipeline.data.data_preprocessing.save_data")
+@patch("src.pipeline.data.data_preprocessing.preprocess")
+@patch("src.pipeline.data.data_preprocessing.load_data")
+@patch("src.pipeline.data.data_preprocessing.load_params")
+@patch("src.pipeline.data.data_preprocessing.start_run")
+@patch("src.pipeline.data.data_preprocessing.set_experiment")
 def test_main(mock_set_exp, mock_start_run, mock_load_params, mock_load_data, mock_preprocess, mock_save_data):
     df_mock = pd.DataFrame({"a": [1, 2]})
     mock_load_data.return_value = df_mock

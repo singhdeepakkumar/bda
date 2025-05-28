@@ -1,8 +1,7 @@
 import pandas as pd
 from unittest.mock import patch
-import pytest
 
-from src.feature_engineering import load_data, process, save_data
+from src.pipeline.data import load_data, process, save_data
 
 
 @patch("pandas.read_csv")
