@@ -33,6 +33,10 @@ jobs:
           pip install -r requirements.txt
           pip install --upgrade mlflow
 
+      - name: Run unit tests
+        run: |
+          run: pytest tests/data-pipeline
+
       - name: Set up GCP credentials
         run: |
           echo "${{ secrets.GCP_SERVICE_ACCOUNT_JSON }}" | base64 -d > /tmp/gcp-key.json
@@ -56,9 +60,17 @@ jobs:
           # verify remote
           dvc remote list
 
-      - name: Run Pipeline and Push Processed Data
+      - name: Run Data Loading
         run: |
-          python pipeline/preprocessing.py
+          python pipeline/data/data_loading.py
+
+      - name: Run Data Preprocessing
+        run: |
+          python pipeline/data/pre_processing.py
+
+      - name: Run Feature Enginnering
+        run: |
+          python pipeline/data/feature_engineering.py
 
       - name: Track and commit processed data
         run: |
@@ -85,7 +97,7 @@ jobs:
           VERSION="data-v$(date +'%Y.%m.%d.%H%M')"
           git config --global user.email "singh.d.kumar@gmail.com"
           git config --global user.name "GitHub Actions"
-          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}
+          git remote set-url origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}
           if git rev-parse "$VERSION" >/dev/null 2>&1; then
             echo "Tag $VERSION already exists. Skipping tagging."
           else
