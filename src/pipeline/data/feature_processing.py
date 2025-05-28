@@ -31,6 +31,20 @@ def process(df):
         df[col] = le.fit_transform(df[col])
     
     return df
+from sklearn.model_selection import train_test_split
+
+def save_train_test_data(df):
+    # Split data into train and test sets
+    train_df, test_df = train_test_split(df, test_size=0.2, random_state=42)
+    # Save to separate CSVs
+    train_output_path = "data/processed/telecom_customer_churn_train.csv"
+    test_output_path = "data/processed/telecom_customer_churn_test.csv"
+    save_data(train_df, train_output_path)
+    save_data(test_df, test_output_path)
+
+    # Log artifacts to MLflow
+    log_artifact(train_output_path)
+    log_artifact(test_output_path)
 
 def save_data(df, output_path):
     df.to_csv(output_path, index=False)
@@ -41,12 +55,9 @@ def save_data(df, output_path):
 def main():
     set_experiment("feature_engineering")
     with start_run():           
-        df = load_data("./data/raw/telecom_customer_churn_cleaned.csv")
-        df_new = process(df)
-        output_path = "data/processed/telecom_customer_churn.csv"
-        save_data(df_new,output_path)
-        log_artifact(output_path)
-    
+        df = load_data("data/raw/telecom_customer_churn_cleaned.csv")
+        df_new = process(df)        
+        save_train_test_data(df_new)
 
 if __name__ == "__main__":
     main()

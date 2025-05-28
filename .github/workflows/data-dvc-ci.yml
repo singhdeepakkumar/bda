@@ -88,12 +88,9 @@ jobs:
           if git diff --cached --quiet; then
             echo "WARNING: No changes were detected."
           else
-             git config --global user.email "singh.d.kumar@gmail.com"
+            git config --global user.email "singh.d.kumar@gmail.com"
             git config --global user.name "GitHub Actions"
-
-            # 🔑 Re-authenticate GitHub before pushing
             git remote set-url origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}
-
             git commit -m "Auto DVC update"
             git push
             dvc push
@@ -110,4 +107,26 @@ jobs:
           else
             git tag -a $VERSION -m "Preprocessed data version created by CI on $(date)"
             git push origin $VERSION
+          fi
+
+      - name: Model Training
+        run: PYTHONPATH=. python src/pipeline/model/model_train.py
+
+      - name: model evaluation
+        run: PYTHONPATH=. python src/pipeline/model/model_test.py
+
+      - name: Push evaluauted model and metrics to DagsHub via DVC
+        run: |
+          dvc add models/*.pkl reports/metrics.json
+          git add models/*.pkl.dvc reports/metrics.json.dvc
+
+          if git diff --cached --quiet; then
+              echo "WARNING: No changes were detected."
+          else
+            git config --global user.email "singh.d.kumar@gmail.com"
+            git config --global user.name "GitHub Actions"
+            git remote set-url origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}
+            git commit -m "Auto DVC update"
+            git push
+            dvc push
           fi
