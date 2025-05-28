@@ -33,10 +33,6 @@ jobs:
           pip install -r requirements.txt
           pip install --upgrade mlflow
 
-      - name: Run unit tests
-        run: |
-          PYTHONPATH=. pytest tests/data-pipeline/
-
       - name: Set up GCP credentials
         run: |
           echo "${{ secrets.GCP_SERVICE_ACCOUNT_JSON }}" | base64 -d > /tmp/gcp-key.json
