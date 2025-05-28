@@ -1,0 +1,69 @@
+name: Preprocess and DVC Version Processed Data
+
+on:
+  push:
+    branches: [master, development, feature/**]
+  pull_request:
+    branches: [master, development, feature/**]
+  workflow_dispatch:
+
+env:
+  RAW_DATA_PATH: data/raw/telecom_customer_churn.csv
+  OUTPUT_PATH: "data/processed/telecom_customer_churn.csv"
+
+jobs:
+  preprocess:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Set up GCP credentials
+        run: |
+          echo "${{ secrets.GCP_SERVICE_ACCOUNT_JSON }}" | base64 -d > /tmp/gcp-key.json
+          cat /tmp/gcp-key.json | jq .  # validate
+          gcloud auth activate-service-account --key-file=/tmp/gcp-key.json
+
+      - name: Configure DVC Remote for GCS
+        run: |
+          echo "${{ secrets.GCS_DVC_REMOTE_NAME }}"
+          dvc remote add -d dvcgcsremote gs://${{ secrets.GCS_BUCKET }}/processed_data
+          dvc remote modify dvcgcsremote credentialpath /tmp/gcp-key.json
+          dvc remote modify dvcgcsremote projectname ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Download raw data from GCS (no DVC)
+        run: |
+          mkdir -p data/raw
+          gsutil cp gs://${{ secrets.GCS_BUCKET }}/raw_data/telecom_customer_churn.csv data/raw/
+
+      - name: DVC Track Processed Data
+        run: |
+          dvc remote modify ${{ secrets.GCS_DVC_REMOTE_NAME }} credentialpath /tmp/gcp-key.json
+
+      - name: Run DVC Pipeline and Push Processed Data
+        run: |
+          dvc repro
+          dvc push
+
+      - name: Create and push version tag
+        run: |
+          VERSION="data-v$(date +'%Y.%m.%d.%H%M')"
+          git config --global user.email "singh.d.kumar@gmail.com"
+          git config --global user.name "GitHub Actions"
+          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "Tag $VERSION already exists. Skipping tagging."
+          else
+            git tag -a $VERSION -m "Preprocessed data version created by CI on $(date)"
+            git push origin $VERSION
+          fi
