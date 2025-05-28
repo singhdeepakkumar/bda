@@ -32,6 +32,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install --upgrade mlflow
+      #- name: Run data loading unit tests
+      #  run: |
+      #    PYTHONPATH=. pytest tests/data-pipeline/test_data_loading.py
+
+      #- name: Run data preprocessing unit tests
+      #  run: |
+      #    PYTHONPATH=. pytest tests/data-pipeline/test_data_preprocessing.py
+
+      #- name: Run Data feature engineering unit tests
+      #  run: |
+      #    PYTHONPATH=. pytest tests/data-pipeline/test_feature_engineering.py
 
       - name: Set up GCP credentials
         run: |
@@ -56,25 +67,32 @@ jobs:
           # verify remote
           dvc remote list
 
-      - name: Run Pipeline and Push Processed Data
+      - name: Run Data Loading
         run: |
-          python pipeline/preprocessing.py
+          PYTHONPATH=. python src/pipeline/data/data_loading.py
+
+      - name: Run Data Preprocessing
+        run: |
+          PYTHONPATH=. python src/pipeline/data/pre_processing.py
+
+      - name: Run Feature Enginnering
+        run: |
+          PYTHONPATH=. python src/pipeline/data/feature_processing.py
 
       - name: Track and commit processed data
         run: |
-          dvc add data/processed/telecom_customer_churn.csv
-          git add data/processed/telecom_customer_churn.csv.dvc
+          dvc add data/processed/telecom_customer_churn_train.csv
+          dvc add data/processed/telecom_customer_churn_test.csv
+          git add data/processed/telecom_customer_churn_train.csv.dvc
+          git add data/processed/telecom_customer_churn_test.csv.dvc
           git add data/processed/.gitignore
 
           if git diff --cached --quiet; then
             echo "WARNING: No changes were detected."
           else
-             git config --global user.email "singh.d.kumar@gmail.com"
+            git config --global user.email "singh.d.kumar@gmail.com"
             git config --global user.name "GitHub Actions"
-
-            # 🔑 Re-authenticate GitHub before pushing
             git remote set-url origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}
-
             git commit -m "Auto DVC update"
             git push
             dvc push
@@ -85,10 +103,32 @@ jobs:
           VERSION="data-v$(date +'%Y.%m.%d.%H%M')"
           git config --global user.email "singh.d.kumar@gmail.com"
           git config --global user.name "GitHub Actions"
-          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}
+          git remote set-url origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}
           if git rev-parse "$VERSION" >/dev/null 2>&1; then
             echo "Tag $VERSION already exists. Skipping tagging."
           else
             git tag -a $VERSION -m "Preprocessed data version created by CI on $(date)"
             git push origin $VERSION
+          fi
+
+      - name: Model Training
+        run: PYTHONPATH=. python src/pipeline/model/model_train.py
+
+      - name: Model Testing
+        run: PYTHONPATH=. python src/pipeline/model/model_test.py
+
+      - name: Push tested model and metrics to DagsHub via DVC
+        run: |
+          dvc add models/*.pkl reports/metrics.json
+          git add models/*.pkl.dvc reports/metrics.json.dvc
+
+          if git diff --cached --quiet; then
+              echo "WARNING: No changes were detected."
+          else
+            git config --global user.email "singh.d.kumar@gmail.com"
+            git config --global user.name "GitHub Actions"
+            git remote set-url origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}
+            git commit -m "Auto DVC update"
+            git push
+            dvc push
           fi
