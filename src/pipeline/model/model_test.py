@@ -5,10 +5,10 @@ import joblib
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report
 import mlflow
 from mlflow import set_experiment, start_run, log_metric, log_artifact
-from src.common.util import logging_setup
+from src.common.util import logging_setup, init_mlflow
 
 logger = logging_setup('model_testing')
-mlflow.autolog()
+init_mlflow("model_testing_decision_tree_training_experiment")
 
 def load_test_data(path):
     return pd.read_csv(path)
@@ -34,7 +34,7 @@ def save_metrics(metrics: dict, file_path: str) -> None:
     logger.debug('Metrics saved to %s', file_path)
     
 def main():
-    set_experiment("decision_tree_testing")
+    set_experiment("model_building_decision_tree_training_experiment")
     with start_run():
         test_df = load_test_data("data/processed/telecom_customer_churn_test.csv")
         X_test = test_df.drop(columns=["Customer Status"])
@@ -44,7 +44,7 @@ def main():
         metrics = evaluate(model, X_test, y_test)
 
         for key, value in metrics.items():
-            log_metric(key, value)
+            mlflow.log_metric(key, value)
 
         metrics_path = 'reports/metrics.json'
         save_metrics(metrics, metrics_path)

@@ -8,10 +8,10 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
 from mlflow import log_metric, log_param, log_artifact, set_experiment, start_run, mlflow
-from src.common.util import load_params, logging_setup
+from src.common.util import load_params, logging_setup, init_mlflow
 
 logger = logging_setup('model_building')
-mlflow.autolog()
+init_mlflow("model_building_decision_tree_training_experiment")
 
 def load_data(input_path):    
     print(f"Loading data from: {input_path}")
@@ -39,9 +39,9 @@ def train_model(train_df):
            'max_leaf_nodes': range(1, 20)
     }
     params = load_params('./parameters.yml')['model_building']
-    random_state = params["random_state"]
+    random_state = params.get("random_state",42)
     mlflow.log_metric("training_sample_count", len(X_train))
-    mlflow.log_param("random_state", params["random_state"])
+    mlflow.log_param("random_state", random_state)
     mlflow.log_param("random_grid", param_grid)
     mlflow.log_param("cv", 2)
     base_model = DecisionTreeClassifier(random_state=random_state )

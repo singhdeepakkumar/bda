@@ -3,10 +3,10 @@ from mlflow import start_run, set_experiment, log_param, log_metric, log_artifac
 import os
 import pandas as pd
 
-from src.common.util import load_params, logging_setup
+from src.common.util import init_mlflow, load_params, logging_setup
 
 logger = logging_setup('data_preprocessing')
-mlflow.autolog()
+init_mlflow("fdata_preprocessing")
 
 def load_data(input_path):    
     print(f"Loading data from: {input_path}")
@@ -22,7 +22,7 @@ def preprocess(df):
     logger.debug('Duplicates removed')
     final_rows = df.shape[0]
     logger.debug(f"Removed {initial_rows - final_rows} duplicate rows")
-    log_metric("rows_after_dedup", final_rows)
+    mlflow.log_metric("rows_after_dedup", final_rows)
     # filling 0.0 GB for customers with no internet service
     df.loc[df['Internet Service'] == 'No', 'Avg Monthly GB Download'] = df.loc[df['Internet Service'] == 'No', 'Avg Monthly GB Download'].fillna(0.0)
     
@@ -56,7 +56,7 @@ def main():
         df_cleaned = preprocess(df)
         output_path = "data/raw/telecom_customer_churn_cleaned.csv"
         save_data(df_cleaned, output_path)
-        log_artifact(output_path)
+        mlflow.log_artifact(output_path)
 
 if __name__ == "__main__":
     main()

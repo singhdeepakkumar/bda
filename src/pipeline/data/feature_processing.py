@@ -4,10 +4,10 @@ from sklearn.preprocessing import LabelEncoder
 from mlflow import start_run, set_experiment, log_param, log_metric, log_artifact, mlflow
 import pandas as pd
 
-from src.common.util import load_params, logging_setup
+from src.common.util import load_params, logging_setup, init_mlflow
 
 logger = logging_setup('feature_engineering')
-mlflow.autolog()
+init_mlflow("feature_engineering")
 
 def load_data(input_path):    
     print(f"Loading data from: {input_path}")
@@ -43,8 +43,8 @@ def save_train_test_data(df):
     save_data(test_df, test_output_path)
 
     # Log artifacts to MLflow
-    log_artifact(train_output_path)
-    log_artifact(test_output_path)
+    mlflow.log_artifact(train_output_path)
+    mlflow.log_artifact(test_output_path)
 
 def save_data(df, output_path):
     df.to_csv(output_path, index=False)

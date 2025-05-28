@@ -1,6 +1,8 @@
 import yaml
 import logging
 import os
+import mlflow
+
 
 def logging_setup(log_file_name):
     log_dir = 'logs'
@@ -43,3 +45,7 @@ def load_params(params_path: str) -> dict:
     except Exception as e:
         logger.error('Unexpected error: %s', e)
         raise
+
+def init_mlflow(experiment_name):
+    mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI"))
+    mlflow.set_experiment(experiment_name)
