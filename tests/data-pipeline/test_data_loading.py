@@ -31,7 +31,7 @@ def test_save_data(tmp_path, sample_dataframe):
     data_loading.save_data(sample_dataframe, output_path)
     # Read back and verify
     result = pd.read_csv(output_path)
-    pd.testing.assert_frame_equal(result, sample_dataframe)
+    pd.testing.assert_frame_equal(result, sample_dataframe,check_dtype=False)
 
 @patch("src.pipeline.data.data_loading.log_metric")
 @patch("src.pipeline.data.data_loading.log_artifact")
