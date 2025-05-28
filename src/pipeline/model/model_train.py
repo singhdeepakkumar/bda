@@ -36,7 +36,7 @@ def train_model(train_df):
 
     param_grid = {
            'criterion': ['gini', 'entropy'],
-           'max_leaf_nodes': range(1, 20)
+           'max_leaf_nodes': range(2, 20)
     }
     params = load_params('./parameters.yml')['model_building']
     random_state = params.get("random_state",42)
@@ -62,12 +62,12 @@ def main():
         train_df = load_data("data/processed/telecom_customer_churn_train.csv")
         best_model = train_model(train_df)
         model_path = save_model(best_model)
-        # log_artifact(model_path)
+        log_artifact(model_path)
         # Log and register the model
         mlflow.sklearn.log_model(
             sk_model=best_model,
             artifact_path="model",
-            registered_model_name="DecisionTreeChurnModel"
+            registered_model_name="DecisionTreeTelecomCustomerChurnModel"
         )
 
 if __name__ == '__main__':
