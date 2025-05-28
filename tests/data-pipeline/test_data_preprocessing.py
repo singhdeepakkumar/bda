@@ -36,7 +36,7 @@ def test_load_data():
         mock_read.assert_called_once_with("some_path.csv")
 
 def test_preprocess(raw_df):
-    with patch("src.data_pipeline.data_preprocessing.log_metric") as mock_log_metric:
+    with patch("src.pipeline.data.pre_processing.log_metric") as mock_log_metric:
         cleaned_df = pre_processing.preprocess(raw_df.copy())
 
         # Check no nulls in processed columns
@@ -62,12 +62,12 @@ def test_save_data(tmp_path):
     loaded = pd.read_csv(file_path)
     pd.testing.assert_frame_equal(df, loaded,check_dtype=False)
 
-@patch("src.pipeline.data.data_preprocessing.save_data")
-@patch("src.pipeline.data.data_preprocessing.preprocess")
-@patch("src.pipeline.data.data_preprocessing.load_data")
-@patch("src.pipeline.data.data_preprocessing.load_params")
-@patch("src.pipeline.data.data_preprocessing.start_run")
-@patch("src.pipeline.data.data_preprocessing.set_experiment")
+@patch("src.pipeline.data.pre_processing.save_data")
+@patch("src.pipeline.data.pre_processing.preprocess")
+@patch("src.pipeline.data.pre_processing.load_data")
+@patch("src.pipeline.data.pre_processing.load_params")
+@patch("src.pipeline.data.pre_processing.start_run")
+@patch("src.pipeline.data.pre_processing.set_experiment")
 def test_main(mock_set_exp, mock_start_run, mock_load_params, mock_load_data, mock_preprocess, mock_save_data):
     df_mock = pd.DataFrame({"a": [1, 2]})
     mock_load_data.return_value = df_mock
