@@ -30,7 +30,8 @@ def test_save_data(tmp_path, sample_dataframe):
     output_path = tmp_path / "test_output.csv"
     data_loading.save_data(sample_dataframe, output_path)
     # Read back and verify
-    result = pd.read_csv(output_path)
+    result = pd.read_csv(output_path, dtype={"customerID": str})    
+    sample_dataframe["customerID"] = sample_dataframe["customerID"].astype(str)
     pd.testing.assert_frame_equal(result, sample_dataframe,check_dtype=False)
 
 @patch("src.pipeline.data.data_loading.log_metric")
