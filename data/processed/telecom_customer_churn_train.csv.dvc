@@ -1,0 +1,5 @@
+outs:
+- md5: 511ebea8080860d5feaeec77549a007e
+  size: 480989
+  hash: md5
+  path: telecom_customer_churn_train.csv
