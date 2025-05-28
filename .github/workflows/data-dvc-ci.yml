@@ -58,15 +58,15 @@ jobs:
 
       - name: Run Data Loading
         run: |
-          python pipeline/data/data_loading.py
+          PYTHONPATH=. python src/pipeline/data/data_loading.py
 
       - name: Run Data Preprocessing
         run: |
-          python pipeline/data/pre_processing.py
+          PYTHONPATH=. python src/pipeline/data/pre_processing.py
 
       - name: Run Feature Enginnering
         run: |
-          python pipeline/data/feature_engineering.py
+          PYTHONPATH=. python src/pipeline/data/feature_engineering.py
 
       - name: Track and commit processed data
         run: |
