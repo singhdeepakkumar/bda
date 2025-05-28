@@ -32,6 +32,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install --upgrade mlflow
+      - name: Run data loading unit tests
+        run: |
+          PYTHONPATH=. pytest tests/data-pipeline/test_data_loading.py
+
+      - name: Run data preprocessing unit tests
+        run: |
+          PYTHONPATH=. pytest tests/data-pipeline/test_data_preprocessing.py
+
+      - name: Run Data feature engineering unit tests
+        run: |
+          PYTHONPATH=. pytest tests/data-pipeline/test_feature_engineering.py
 
       - name: Set up GCP credentials
         run: |
@@ -66,7 +77,7 @@ jobs:
 
       - name: Run Feature Enginnering
         run: |
-          PYTHONPATH=. python src/pipeline/data/feature_engineering.py
+          PYTHONPATH=. python src/pipeline/data/feature_processing.py
 
       - name: Track and commit processed data
         run: |
