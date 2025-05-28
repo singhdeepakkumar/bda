@@ -49,9 +49,12 @@ jobs:
         run: |
           git remote set-url origin https://${{ secrets.DAGSHUB_USERNAME }}:${{ secrets.DAGSHUB_TOKEN }}@dagshub.com/singhdeepakkumar/bda-mlops.git
           dvc remote add -d dagshub-remote https://dagshub.com/singhdeepakkumar/bda-mlops.dvc          
-          dvc remote modify --local auth basic
-          dvc remote modify --local user "${{ secrets.DAGSHUB_USERNAME }}"
-          dvc remote modify --local password "${{ secrets.DAGSHUB_TOKEN }}"
+          dvc remote modify dagshub-remote --local auth basic
+          dvc remote modify dagshub-remote --local user "${{ secrets.DAGSHUB_USERNAME }}"
+          dvc remote modify dagshub-remote --local password "${{ secrets.DAGSHUB_TOKEN }}"
+
+          # verify remote
+          dvc remote list
 
       - name: Run Pipeline and Push Processed Data
         run: |
