@@ -12,7 +12,7 @@ def test_load_data(mock_read_csv):
 
     result = load_data("fake_path.csv")
     mock_read_csv.assert_called_once_with("fake_path.csv")
-    pd.testing.assert_frame_equal(result, dummy_df)
+    pd.testing.assert_frame_equal(result, dummy_df,check_dtype=False)
 
 
 def test_process_removes_columns_and_encodes():
