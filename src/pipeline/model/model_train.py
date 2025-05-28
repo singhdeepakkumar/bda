@@ -62,7 +62,13 @@ def main():
         train_df = load_data("data/processed/telecom_customer_churn_train.csv")
         best_model = train_model(train_df)
         model_path = save_model(best_model)
-        log_artifact(model_path)
+        l#og_artifact(model_path)
+        # Log and register the model
+        mlflow.sklearn.log_model(
+            sk_model=best_model,
+            artifact_path="model",
+            registered_model_name="DecisionTreeChurnModel"
+        )
 
 if __name__ == '__main__':
     main()
