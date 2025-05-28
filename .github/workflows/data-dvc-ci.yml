@@ -1,4 +1,4 @@
-name: Preprocess and DVC Version Processed Data
+name: Pipeline to ingest data, do pre-processing, model trainting and testing and versioning
 
 on:
   push:
@@ -10,6 +10,9 @@ on:
 env:
   RAW_DATA_PATH: data/raw/telecom_customer_churn.csv
   OUTPUT_PATH: "data/processed/telecom_customer_churn.csv"
+  MLFLOW_TRACKING_URI: https://dagshub.com/singhdeepakkumar/my-bda-repo.mlflow
+  MLFLOW_TRACKING_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
+  MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
 
 jobs:
   preprocess:
@@ -26,7 +29,9 @@ jobs:
 
       - name: Install dependencies
         run: |
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install --upgrade mlflow
 
       - name: Set up GCP credentials
         run: |
@@ -34,26 +39,37 @@ jobs:
           cat /tmp/gcp-key.json | jq .  # validate
           gcloud auth activate-service-account --key-file=/tmp/gcp-key.json
 
-      - name: Configure DVC Remote for GCS
+      - name: Configure Git
         run: |
-          echo "${{ secrets.GCS_DVC_REMOTE_NAME }}"
-          dvc remote add -d dvcgcsremote gs://${{ secrets.GCS_BUCKET }}/processed_data
-          dvc remote modify dvcgcsremote credentialpath /tmp/gcp-key.json
-          dvc remote modify dvcgcsremote projectname ${{ secrets.GCP_PROJECT_ID }}
+          git config --global user.email "singh.d.kumar@gmail.com"
+          git config --global user.name "GitHub Actions"
+          dvc config core.autostage true
 
-      - name: Download raw data from GCS (no DVC)
+      - name: Set up and configure DVC remote for Dagshub
         run: |
-          mkdir -p data/raw
-          gsutil cp gs://${{ secrets.GCS_BUCKET }}/raw_data/telecom_customer_churn.csv data/raw/
+          git remote set-url origin https://${{ secrets.DAGSHUB_USERNAME }}:${{ secrets.DAGSHUB_TOKEN }}@dagshub.com/singhdeepakkumar/bda-mlops.git
+          dvc remote add -d dagshub-remote https://github.com/singhdeepakkumar/bda.git          
+          dvc remote modify --local auth basic
+          dvc remote modify --local user "${{ secrets.DAGSHUB_USERNAME }}"
+          dvc remote modify --local password "${{ secrets.DAGSHUB_TOKEN }}"
 
-      - name: DVC Track Processed Data
+      - name: Run Pipeline and Push Processed Data
         run: |
-          dvc remote modify ${{ secrets.GCS_DVC_REMOTE_NAME }} credentialpath /tmp/gcp-key.json
+          python pipeline/preprocessing.py
 
-      - name: Run DVC Pipeline and Push Processed Data
+      - name: Track and commit processed data
         run: |
-          dvc repro
-          dvc push
+          dvc add data/processed/telecom_customer_churn.csv
+          git add data/processed/telecom_customer_churn.csv.dvc
+          git add data/processed/.gitignore
+
+          if git diff --cached --quiet; then
+            echo "WARNING: No changes were detected."
+          else
+            git commit -m "Auto DVC update"
+            git push
+            dvc push
+          fi
 
       - name: Create and push version tag
         run: |
