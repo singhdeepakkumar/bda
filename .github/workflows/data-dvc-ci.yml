@@ -48,7 +48,7 @@ jobs:
       - name: Set up and configure DVC remote for Dagshub
         run: |
           git remote set-url origin https://${{ secrets.DAGSHUB_USERNAME }}:${{ secrets.DAGSHUB_TOKEN }}@dagshub.com/singhdeepakkumar/bda-mlops.git
-          dvc remote add -d dagshub-remote https://github.com/singhdeepakkumar/bda.git          
+          dvc remote add -d dagshub-remote https://dagshub.com/singhdeepakkumar/bda-mlops.dvc          
           dvc remote modify --local auth basic
           dvc remote modify --local user "${{ secrets.DAGSHUB_USERNAME }}"
           dvc remote modify --local password "${{ secrets.DAGSHUB_TOKEN }}"
