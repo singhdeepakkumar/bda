@@ -81,8 +81,10 @@ jobs:
 
       - name: Track and commit processed data
         run: |
-          dvc add data/processed/telecom_customer_churn.csv
-          git add data/processed/telecom_customer_churn.csv.dvc
+          dvc add data/processed/telecom_customer_churn_train.csv
+          dvc add data/processed/telecom_customer_churn_test.csv
+          git add data/processed/telecom_customer_churn_train.csv.dvc
+          git add data/processed/telecom_customer_churn_test.csv.dvc
           git add data/processed/.gitignore
 
           if git diff --cached --quiet; then
@@ -112,10 +114,10 @@ jobs:
       - name: Model Training
         run: PYTHONPATH=. python src/pipeline/model/model_train.py
 
-      - name: model evaluation
+      - name: Model Testing
         run: PYTHONPATH=. python src/pipeline/model/model_test.py
 
-      - name: Push evaluauted model and metrics to DagsHub via DVC
+      - name: Push tested model and metrics to DagsHub via DVC
         run: |
           dvc add models/*.pkl reports/metrics.json
           git add models/*.pkl.dvc reports/metrics.json.dvc
