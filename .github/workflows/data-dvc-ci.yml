@@ -35,7 +35,7 @@ jobs:
 
       - name: Run unit tests
         run: |
-          run: pytest tests/data-pipeline
+          run: pytest tests/data-pipeline/
 
       - name: Set up GCP credentials
         run: |
