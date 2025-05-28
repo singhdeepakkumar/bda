@@ -98,18 +98,18 @@ jobs:
             dvc push
           fi
 
-      - name: Create and push version tag
-        run: |
-          VERSION="data-v$(date +'%Y.%m.%d.%H%M')"
-          git config --global user.email "singh.d.kumar@gmail.com"
-          git config --global user.name "GitHub Actions"
-          git remote set-url origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}
-          if git rev-parse "$VERSION" >/dev/null 2>&1; then
-            echo "Tag $VERSION already exists. Skipping tagging."
-          else
-            git tag -a $VERSION -m "Preprocessed data version created by CI on $(date)"
-            git push origin $VERSION
-          fi
+      #- name: Create and push version tag
+      #  run: |
+      #    VERSION="data-v$(date +'%Y.%m.%d.%H%M')"
+      #    git config --global user.email "singh.d.kumar@gmail.com"
+      #    git config --global user.name "GitHub Actions"
+      #    git remote set-url origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}
+      #    if git rev-parse "$VERSION" >/dev/null 2>&1; then
+      #      echo "Tag $VERSION already exists. Skipping tagging."
+      #    else
+      #      git tag -a $VERSION -m "Preprocessed data version created by CI on $(date)"
+      #      git push origin $VERSION
+      #    fi
 
       - name: Model Training
         run: PYTHONPATH=. python src/pipeline/model/model_train.py
