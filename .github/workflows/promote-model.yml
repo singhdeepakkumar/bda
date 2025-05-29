@@ -57,7 +57,7 @@ jobs:
           with open(os.environ['GITHUB_ENV'], "a") as f:
               f.write(f"PROMOTED_VERSION={version_to_promote}\n")
           print(f"Model version {version_to_promote} promoted to Production.")
-          promoted = client.get_model_version(name=model_name, version=version)
+          promoted = client.get_model_version(name=model_name, version=version_to_promote)
           print(f"Model version {version_to_promote} is now in stage: {promoted.current_stage}")
           EOF
 
