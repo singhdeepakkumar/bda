@@ -55,10 +55,10 @@ jobs:
 
           client.set_registered_model_alias(model_name, "production", version_to_promote)
           with open(os.environ['GITHUB_ENV'], "a") as f:
-              f.write(f"PROMOTED_VERSION={version}\n")
-          print(f"Model version {version} promoted to Production.")
+              f.write(f"PROMOTED_VERSION={version_to_promote}\n")
+          print(f"Model version {version_to_promote} promoted to Production.")
           promoted = client.get_model_version(name=model_name, version=version)
-          print(f"Model version {version} is now in stage: {promoted.current_stage}")
+          print(f"Model version {version_to_promote} is now in stage: {promoted.current_stage}")
           EOF
 
       - name: Trigger deployment in app repo
