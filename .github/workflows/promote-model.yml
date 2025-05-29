@@ -43,29 +43,21 @@ jobs:
           mlflow.set_tracking_uri("${{ env.MLFLOW_TRACKING_URI }}")
           client = MlflowClient()
           model_name = "${{ env.MODEL_NAME }}"
-          version = os.getenv("INPUT_VERSION")
+          user_version = os.getenv("INPUT_VERSION")
 
-          if version:
-              print(f"Promoting specified model version: {version}")
+          if user_version:
+              version_to_promote = user_version
+              print(f"Using user-specified model version: {version_to_promote}")
           else:
-              print("No version specified, selecting latest available...")
-              versions = client.get_latest_versions(model_name, stages=["None", "Staging"])
-              if not versions:
-                  print("No candidate model version to promote.")
-                  exit(1)
-              version = versions[0].version
-              print(f"Selected latest model version: {version}")
+              all_versions = client.search_model_versions(f"name='{model_name}'")              
+              version_to_promote = sorted(all_versions, key=lambda v: int(v.version))[-1].version
+              print(f"Promoting latest model version: {version_to_promote}")
 
-          client.transition_model_version_stage(
-              name=model_name,
-              version=version,
-              stage="Production",
-              archive_existing_versions=True
-          )
+          client.set_registered_model_alias(model_name, "production", version_to_promote)
           with open(os.environ['GITHUB_ENV'], "a") as f:
               f.write(f"PROMOTED_VERSION={version}\n")
           print(f"Model version {version} promoted to Production.")
-          promoted = client.get_model_version(name=model_name, version=version_to_promote)
+          promoted = client.get_model_version(name=model_name, version=version)
           print(f"Model version {version} is now in stage: {promoted.current_stage}")
           EOF
 
