@@ -39,6 +39,7 @@ jobs:
         run: |
           python <<EOF
           import os
+          import mlflow
           from mlflow.tracking import MlflowClient
           mlflow.set_tracking_uri("${{ env.MLFLOW_TRACKING_URI }}")
           client = MlflowClient()
