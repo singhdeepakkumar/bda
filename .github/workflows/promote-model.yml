@@ -71,7 +71,7 @@ jobs:
       - name: Trigger deployment in app repo
         uses: peter-evans/repository-dispatch@v2
         with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          token: ${{ secrets.GH_TOKEN }}
           repository: singhdeepakkumar/bda-app
           event-type: deploy-app-model
           client-payload: '{"model_version": "${{ env.PROMOTED_VERSION }}"}'
