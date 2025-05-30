@@ -2,9 +2,7 @@ name: Pipeline to ingest data, do pre-processing, model trainting and testing an
 
 on:
   push:
-    branches: [feature/**]
-  pull_request:
-    branches: [master, development, release/**]
+    branches: [master, development, release/**, feature/**]
   workflow_dispatch:
 
 env:
