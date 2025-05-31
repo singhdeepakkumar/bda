@@ -44,4 +44,4 @@ jobs:
 
       - name: Tag best model as candidate if better than production
         run: |
-          PYTHONPATH=. python src/pipeline/model/promote_if_better.py
+          PYTHONPATH=. python src/pipeline/model/promote_retranied_model.py
