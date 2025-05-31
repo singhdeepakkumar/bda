@@ -1,0 +1,13 @@
+scikit-learn
+pandas
+dvc
+dvc[gs]
+pytest
+streamlit
+requests
+nltk
+flask
+joblib
+dagshub
+mlflow
+

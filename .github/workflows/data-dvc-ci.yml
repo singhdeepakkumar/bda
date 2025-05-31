@@ -1,0 +1,132 @@
+name: Pipeline to ingest data, do pre-processing, model trainting and testing and versioning
+
+on:
+  push:
+    branches: [master, development, release/**, feature/**]
+  workflow_dispatch:
+
+env:
+  RAW_DATA_PATH: data/raw/telecom_customer_churn.csv
+  OUTPUT_PATH: "data/processed/telecom_customer_churn.csv"
+  MLFLOW_TRACKING_URI: https://dagshub.com/singhdeepakkumar/my-bda-repo.mlflow
+  MLFLOW_TRACKING_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
+  MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
+
+jobs:
+  preprocess:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install --upgrade mlflow
+      #- name: Run data loading unit tests
+      #  run: |
+      #    PYTHONPATH=. pytest tests/data-pipeline/test_data_loading.py
+
+      #- name: Run data preprocessing unit tests
+      #  run: |
+      #    PYTHONPATH=. pytest tests/data-pipeline/test_data_preprocessing.py
+
+      #- name: Run Data feature engineering unit tests
+      #  run: |
+      #    PYTHONPATH=. pytest tests/data-pipeline/test_feature_engineering.py
+
+      - name: Set up GCP credentials
+        run: |
+          echo "${{ secrets.GCP_SERVICE_ACCOUNT_JSON }}" | base64 -d > /tmp/gcp-key.json
+          cat /tmp/gcp-key.json | jq .  # validate
+          gcloud auth activate-service-account --key-file=/tmp/gcp-key.json
+
+      - name: Configure Git
+        run: |
+          git config --global user.email "singh.d.kumar@gmail.com"
+          git config --global user.name "GitHub Actions"
+          dvc config core.autostage true
+
+      - name: Set up and configure DVC remote for Dagshub
+        run: |
+          git remote set-url origin https://${{ secrets.DAGSHUB_USERNAME }}:${{ secrets.DAGSHUB_TOKEN }}@dagshub.com/singhdeepakkumar/bda-mlops.git
+          dvc remote add -d dagshub-remote https://dagshub.com/singhdeepakkumar/bda-mlops.dvc          
+          dvc remote modify dagshub-remote --local auth basic
+          dvc remote modify dagshub-remote --local user "${{ secrets.DAGSHUB_USERNAME }}"
+          dvc remote modify dagshub-remote --local password "${{ secrets.DAGSHUB_TOKEN }}"
+
+          # verify remote
+          dvc remote list
+
+      - name: Run Data Loading
+        run: |
+          PYTHONPATH=. python src/pipeline/data/data_loading.py
+
+      - name: Run Data Preprocessing
+        run: |
+          PYTHONPATH=. python src/pipeline/data/pre_processing.py
+
+      - name: Run Feature Enginnering
+        run: |
+          PYTHONPATH=. python src/pipeline/data/feature_processing.py
+
+      - name: Track and commit processed data
+        run: |
+          dvc add data/processed/telecom_customer_churn_train.csv
+          dvc add data/processed/telecom_customer_churn_test.csv
+          git add data/processed/telecom_customer_churn_train.csv.dvc
+          git add data/processed/telecom_customer_churn_test.csv.dvc
+          git add data/processed/.gitignore
+
+          if git diff --cached --quiet; then
+            echo "WARNING: No changes were detected."
+          else
+            git config --global user.email "singh.d.kumar@gmail.com"
+            git config --global user.name "GitHub Actions"
+            git remote set-url origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}
+            git commit -m "Auto DVC update"
+            git push
+            dvc push
+          fi
+
+      #- name: Create and push version tag
+      #  run: |
+      #    VERSION="data-v$(date +'%Y.%m.%d.%H%M')"
+      #    git config --global user.email "singh.d.kumar@gmail.com"
+      #    git config --global user.name "GitHub Actions"
+      #    git remote set-url origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}
+      #    if git rev-parse "$VERSION" >/dev/null 2>&1; then
+      #      echo "Tag $VERSION already exists. Skipping tagging."
+      #    else
+      #      git tag -a $VERSION -m "Preprocessed data version created by CI on $(date)"
+      #      git push origin $VERSION
+      #    fi
+
+      - name: Model Training
+        run: PYTHONPATH=. python src/pipeline/model/model_train.py
+
+      - name: Model Testing
+        run: PYTHONPATH=. python src/pipeline/model/model_test.py
+
+      - name: Push tested model and metrics to DagsHub via DVC
+        run: |
+          dvc add models/*.pkl reports/metrics.json
+          git add models/*.pkl.dvc reports/metrics.json.dvc
+
+          if git diff --cached --quiet; then
+              echo "WARNING: No changes were detected."
+          else
+            git config --global user.email "singh.d.kumar@gmail.com"
+            git config --global user.name "GitHub Actions"
+            git remote set-url origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}
+            git commit -m "Auto DVC update"
+            git push
+            dvc push
+          fi
