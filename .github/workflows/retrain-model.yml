@@ -40,7 +40,7 @@ jobs:
 
       - name: Train and evaluate model
         run: |
-          PYTHONPATH=. python src/pipeline/model/train_and_compare.py
+          PYTHONPATH=. python src/pipeline/model/retrain_and_compare.py
 
       - name: Tag best model as candidate if better than production
         run: |
