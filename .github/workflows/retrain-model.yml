@@ -1,0 +1,47 @@
+name: Retrain Model Pipeline
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # Daily at midnight UTC
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+
+env:
+  MLFLOW_TRACKING_URI: https://dagshub.com/singhdeepakkumar/my-bda-repo.mlflow
+  MLFLOW_TRACKING_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
+  MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
+  MODEL_NAME: DecisionTreeChurnModel
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install mlflow scikit-learn pandas
+
+      - name: Run preprocessing & feature engineering
+        run: |
+          PYTHONPATH=. python src/pipeline/data/data_loading.py
+          PYTHONPATH=. python src/pipeline/data/pre_processing.py
+          PYTHONPATH=. python src/pipeline/data/feature_processing.py
+
+      - name: Train and evaluate model
+        run: |
+          PYTHONPATH=. python src/pipeline/model/train_and_compare.py
+
+      - name: Tag best model as candidate if better than production
+        run: |
+          PYTHONPATH=. python src/pipeline/model/promote_if_better.py
